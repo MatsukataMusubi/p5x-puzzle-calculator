@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P5X 怪盗团团长的特训日程 · 拼图计算器</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif; background: #F4F3EE; color: #1A1B1C; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 44px; height: 44px; border-radius: 10px; background: #1A1B1C; color: #E8342E; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 800; letter-spacing: -1px; box-shadow: 0 2px 6px rgba(0,0,0,0.18); }
+  .logo-text .t1 { font-size: 17px; font-weight: 700; line-height: 1.2; }
+  .logo-text .t2 { font-size: 11px; color: #6B7280; line-height: 1.3; }
+  .bili { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1A1B1C; background: #fff; border: 1px solid #E4E3DD; border-radius: 999px; padding: 5px 12px 5px 5px; }
+  .bili img { width: 30px; height: 30px; border-radius: 50%; display: block; }
+  .bili .bn { font-size: 12px; font-weight: 600; line-height: 1.25; }
+  .bili .bt { font-size: 10px; color: #6B7280; }
+  .sub { font-size: 12px; color: #6B7280; margin: 0 0 12px; line-height: 1.6; }
+  .panel { background: #fff; border: 1px solid #E4E3DD; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
+  .panel h2 { font-size: 14px; margin: 0 0 8px; }
+  .lvbtns { display: flex; flex-wrap: wrap; gap: 4px; }
+  .lvbtn { font-size: 12px; padding: 4px 8px; border: 1px solid #c8cbd3; border-radius: 6px; background: #fff; cursor: pointer; }
+  .lvbtn.active { background: #9EACEA; border-color: #9EACEA; color: #1A1B1C; font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  .calcbtn { font-size: 14px; padding: 8px 20px; border: none; border-radius: 8px; background: #1A1B1C; color: #fff; cursor: pointer; }
+  .calcbtn:disabled { background: #c8cbd3; cursor: not-allowed; }
+  .status { font-size: 12px; color: #6B7280; }
+  .cards { display: flex; flex-wrap: wrap; gap: 8px; }
+  .card { width: 148px; border: 1px solid #E4E3DD; border-radius: 10px; padding: 6px; background: #fff; }
+  .card img { width: 100%; height: auto; border-radius: 6px; display: block; }
+  .card .cn { font-size: 11px; font-weight: 600; margin: 4px 0 2px; }
+  .card .at { font-size: 10px; color: #6B7280; margin-bottom: 4px; }
+  .qty { display: flex; align-items: center; gap: 4px; }
+  .qty button { width: 22px; height: 22px; border: 1px solid #c8cbd3; border-radius: 5px; background: #fff; cursor: pointer; font-size: 13px; line-height: 1; }
+  .qty input { width: 40px; height: 22px; text-align: center; border: 1px solid #c8cbd3; border-radius: 5px; font-size: 12px; }
+  .result { margin-top: 8px; }
+  .solnav { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+  .solnav button { padding: 4px 12px; border: 1px solid #c8cbd3; border-radius: 6px; background: #fff; cursor: pointer; font-size: 12px; }
+  .solnav button:disabled { color: #c8cbd3; cursor: not-allowed; }
+  .solnav select { padding: 4px 8px; border: 1px solid #c8cbd3; border-radius: 6px; font-size: 12px; }
+  .gridrow { display: flex; flex-wrap: wrap; gap: 16px; }
+  .gridbox .gt { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 34px); gap: 3px; }
+  .gcell { width: 34px; height: 34px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; box-sizing: border-box; }
+  .glock { background: #9aa0ab; color: #fff; border: 1px solid #7d828c; }
+  .gused { border: 1px solid rgba(0,0,0,0.15); }
+  .gempty { background: #fff; border: 1px dashed #c8cbd3; }
+  .usecards { min-width: 200px; }
+  .usecard { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .usecard img { width: 64px; height: auto; border-radius: 6px; }
+  .usecard .info { flex: 1; min-width: 0; }
+  .usecard .info .n { font-size: 12px; font-weight: 600; }
+  .usecard .info .a { font-size: 10px; color: #6B7280; }
+  .usecard .cnt { font-size: 11px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-mark">P5X</div>
+      <div class="logo-text">
+        <div class="t1">怪盗团团长的特训日程</div>
+        <div class="t2">拼图计算器 · 每日 04:00 更新</div>
+      </div>
+    </div>
+    <a class="bili" href="https://space.bilibili.com/256599" target="_blank" rel="noopener">
+      <img src="avatar.jpg" alt="月光中的重逢">
+      <div>
+        <div class="bn">月光中的重逢</div>
+        <div class="bt">觉得有用点个关注 →</div>
+      </div>
+    </a>
+  </div>
+
+  <p class="sub">关卡按游戏日程解锁：服务器北京时间每天凌晨 4:00 后，当天的拼图关卡才会出现在列表里。输入你实际拥有的卡片数量 → 选关卡 → 点「开始运算」，列出全部摆法（卡不能旋转/翻转；判定=红/黄/蓝 三项 ≥ 目标即完成，不必铺满；灰色 ✕=锁定格）。</p>
+
+  <div class="panel">
+    <h2>选择关卡</h2>
+    <div class="lvbtns" id="lvbtns"></div>
+    <div class="row">
+      <button class="calcbtn" id="calcBtn">开始运算</button>
+      <span class="status" id="status"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>运算结果</h2>
+    <div class="result" id="result">
+      <div class="status">还没运算 —— 先输入卡片数量，选好关卡。</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>我的卡片（输入数量，0 表示没有）</h2>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="solver.js"></script>
+<script src="renderer.js"></script>
+</body>
+</html>

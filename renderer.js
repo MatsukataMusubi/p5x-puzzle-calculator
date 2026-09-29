@@ -6,6 +6,13 @@
   var LEVELS = window.LEVELS; // [{sn, date, need, locked}]
   var counts = {};
 
+  // 数据未加载完时的兜底提示（data.js 较大，加载中断时不再静默空白）
+  if (!CARDS || !LEVELS || !CARDS['400450'] || !LEVELS.length) {
+    var eb = document.getElementById('result');
+    if (eb) eb.innerHTML = '<div class="status">数据文件加载失败或未完成，请刷新页面重试（Ctrl+F5）。</div>';
+    return;
+  }
+
   // ===== 按日期解锁：服务器北京时间每天凌晨 UNLOCK_HOUR 点后，当天关卡才出现 =====
   var UNLOCK_HOUR = 4;
   var timeOffset = 0;        // ms：服务器北京时间 - 本地钟
@@ -95,13 +102,14 @@
     var qty = document.createElement('div');
     qty.className = 'qty';
     var minus = document.createElement('button'); minus.textContent = '−';
-    var input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 9; input.value = 0;
+    var input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 9; input.value = 1;
     var plus = document.createElement('button'); plus.textContent = '+';
     function setVal(v) {
       v = Math.max(0, Math.min(9, Math.floor(v) || 0));
       input.value = v;
       counts[sn] = v;
     }
+    counts[sn] = 1; // 默认数量 1
     minus.onclick = function () { setVal(parseInt(input.value || 0, 10) - 1); };
     plus.onclick = function () { setVal(parseInt(input.value || 0, 10) + 1); };
     input.onchange = function () { setVal(parseInt(input.value || 0, 10)); };

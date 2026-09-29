@@ -18,6 +18,8 @@
   .bili img { width: 30px; height: 30px; border-radius: 50%; display: block; }
   .bili .bn { font-size: 12px; font-weight: 600; line-height: 1.25; }
   .bili .bt { font-size: 10px; color: #6B7280; }
+  .langbtn { border: 1px solid #E4E3DD; background: #fff; border-radius: 999px; padding: 5px 14px; font-size: 12px; font-weight: 600; cursor: pointer; color: #1A1B1C; }
+  .langbtn:hover { background: #f0f0ec; }
   .sub { font-size: 12px; color: #6B7280; margin: 0 0 12px; line-height: 1.6; }
   .panel { background: #fff; border: 1px solid #E4E3DD; border-radius: 12px; padding: 12px; margin-bottom: 12px; }
   .panel h2 { font-size: 14px; margin: 0 0 8px; }
@@ -64,22 +66,25 @@
       <div class="logo-mark"><img src="logo.png" alt="P5X"></div>
       <div class="logo-text">
         <div class="t1">怪盗团团长的特训日程</div>
-        <div class="t2">拼图计算器 · 每日 04:00 更新</div>
+        <div class="t2" id="logoSub">拼图计算器 · 每日 04:00 更新</div>
       </div>
     </div>
-    <a class="bili" href="https://space.bilibili.com/256599" target="_blank" rel="noopener">
-      <img src="avatar.jpg" alt="月光中的重逢">
-      <div>
-        <div class="bn">月光中的重逢</div>
-        <div class="bt">觉得有用点个关注 →</div>
-      </div>
-    </a>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="langbtn" id="langBtn">EN</button>
+      <a class="bili" href="https://space.bilibili.com/256599" target="_blank" rel="noopener">
+        <img src="avatar.jpg" alt="月光中的重逢">
+        <div>
+          <div class="bn">月光中的重逢</div>
+          <div class="bt" id="followText">觉得有用点个关注 →</div>
+        </div>
+      </a>
+    </div>
   </div>
 
   <p class="sub">关卡按游戏日程解锁：服务器北京时间每天凌晨 4:00 后，当天的拼图关卡才会出现在列表里。输入你实际拥有的卡片数量 → 选关卡 → 点「开始运算」，列出全部摆法（卡不能旋转/翻转；判定=红/黄/蓝 三项 ≥ 目标即完成，不必铺满；灰色 ✕=锁定格）。</p>
 
   <div class="panel">
-    <h2>选择关卡</h2>
+    <h2 id="secLevel">选择关卡</h2>
     <div class="lvbtns" id="lvbtns"></div>
     <div class="row">
       <button class="calcbtn" id="calcBtn">开始运算</button>
@@ -88,14 +93,14 @@
   </div>
 
   <div class="panel">
-    <h2>运算结果</h2>
+    <h2 id="secResult">运算结果</h2>
     <div class="result" id="result">
-      <div class="status">正在加载数据（约 1.4MB，首次打开稍慢，请稍候）…</div>
+      <div class="status" id="loadTip">正在加载数据（约 90KB，请稍候）…</div>
     </div>
   </div>
 
   <div class="panel">
-    <h2>我的卡片（输入数量，0 表示没有）</h2>
+    <h2 id="secCards">我的卡片（输入数量，0 表示没有）</h2>
     <div class="cards" id="cards"></div>
   </div>
 </div>

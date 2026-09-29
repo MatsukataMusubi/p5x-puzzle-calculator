@@ -203,10 +203,17 @@
     }).then(parser);
   }
   var sources = [
-    function () { return tryFetch('https://api.bilibili.com/x/server/time', function (j) { var t = parseInt(j && j.data, 10); return t ? t * 1000 : 0; }); },
+    // 主源：GitHub API（CORS 白名单暴露 X-RateLimit-Reset，UTC epoch 秒）
+    function () {
+      return fetch('https://api.github.com/rate_limit', { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) throw new Error('http ' + r.status);
+        var t = parseInt(r.headers.get('X-RateLimit-Reset'), 10);
+        return t ? t * 1000 : 0;
+      });
+    },
+    // 备用（国外网络可达时使用）
     function () { return tryFetch('https://worldtimeapi.org/api/timezone/Asia/Shanghai', function (j) { return Date.parse(j.datetime); }); },
-    function () { return tryFetch('https://timeapi.io/api/time/current/zone?timeZone=Asia/Shanghai', function (j) { return Date.parse(String(j.currentUtcTime || j.currentUtcTimeUtc || '').trim() + 'Z'); }); },
-    function () { return tryFetch('https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp', function (j) { return parseInt(j.data && j.data.t, 10); }); }
+    function () { return tryFetch('https://timeapi.io/api/time/current/zone?timeZone=Asia/Shanghai', function (j) { return Date.parse(String(j.currentUtcTime || j.currentUtcTimeUtc || '').trim() + 'Z'); }); }
   ];
   function applyServerTime() {
     var i = 0;

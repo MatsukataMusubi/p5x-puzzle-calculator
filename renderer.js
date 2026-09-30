@@ -32,6 +32,8 @@
       done: '完成：{n} 个解（{s}s）',
       noSol: '该关卡在「这些卡数量」下没有可行摆法（换关卡或加卡数量再试）。',
       notCalc: '未计算',
+      previewBadge: '棋盘预览 · 未计算',
+      previewHint: '已选择 {d} 关{sn} —— 调整卡片数量后点「开始运算」才会列出摆法。',
       prev: '上一解',
       next: '下一解',
       target: '目标',
@@ -65,6 +67,8 @@
       done: 'Done: {n} solutions ({s}s)',
       noSol: 'No placement with these quantities (try another level or add more cards).',
       notCalc: 'Not calculated',
+      previewBadge: 'Board preview \u00b7 not calculated',
+      previewHint: 'Selected {d} LV.{sn} \u2014 adjust card quantities, then press "Calculate" to list placements.',
       prev: 'Prev',
       next: 'Next',
       target: 'Target',
@@ -182,6 +186,7 @@
         curLv = lv.sn;
         renderLvBtns();
         sols = []; solIdx = 0;
+        statusEl.textContent = t('previewHint', { d: shortDate(lv.date), sn: lv.sn });
         renderResult();
       };
       lvbtns.appendChild(b);
@@ -249,8 +254,8 @@
     }, 30);
   };
 
-  // 网格渲染（s 为空 = 仅显示目标锁定布局）
-  function renderGrid(lv, s) {
+  // 网格渲染（s 为空 = 仅显示目标锁定布局，preview=true 时加徽章）
+  function renderGrid(lv, s, preview) {
     var locked = {};
     lv.locked.forEach(function (p) { locked[p[0] + ',' + p[1]] = 1; });
     var grid = {};
@@ -268,6 +273,7 @@
     var title = lv.date + ' · ' + t('lvBtn', { sn: lv.sn }) + '（' + t('target') + ' ' + needText(lv.need);
     if (s) title += ' \u2192 ' + t('reached') + ' ' + needText(s.total);
     title += '）';
+    if (preview) title = '<span style="background:#9EACEA;color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:600;margin-right:6px;">' + t('previewBadge') + '</span>' + title;
     return '<div class="gridrow"><div class="gridbox"><div class="gt">' + title + '</div>'
       + '<div class="grid5">' + cells + '</div></div></div>';
   }
@@ -277,8 +283,9 @@
     var box = document.getElementById('result');
     var lv = LEVELS.filter(function (l) { return l.sn === curLv; })[0];
     if (sols.length === 0) {
-      box.innerHTML = '<div class="status">' + (statusEl.textContent || t('notCalc')) + '</div>'
-        + renderGrid(lv, null);
+      box.innerHTML = '<div class="status" style="font-weight:600;color:#9EACEA;margin-bottom:8px;">'
+        + t('previewHint', { d: shortDate(lv.date), sn: lv.sn }) + '</div>'
+        + renderGrid(lv, null, true);
       return;
     }
     var s = sols[solIdx];

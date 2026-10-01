@@ -17,7 +17,7 @@
       secResult: '运算结果',
       secCards: '我的卡片（输入数量，0 表示没有）',
       btnCalc: '开始运算',
-      loading: '正在加载数据（约 90KB，请稍候）…',
+      loading: '正在加载数据（约 380KB，请稍候）…',
       loadFail: '数据文件加载失败或未完成，请刷新页面重试（Ctrl+F5）。',
       follow: '觉得有用点个关注 →',
       timeSource: '时间源',
@@ -52,7 +52,7 @@
       secResult: 'Result',
       secCards: 'My Cards (set quantity, 0 = none)',
       btnCalc: 'Calculate',
-      loading: 'Loading data (~90KB, please wait)\u2026',
+      loading: 'Loading data (~380KB, please wait)\u2026',
       loadFail: 'Data failed to load. Please refresh (Ctrl+F5).',
       follow: 'Follow if helpful \u2192',
       timeSource: 'Time source',
@@ -266,16 +266,32 @@
       for (var x = 0; x < 5; x++) {
         var k = x + ',' + y;
         if (locked[k]) cells += '<div class="gcell glock">\u2715</div>';
-        else if (grid[k]) cells += '<div class="gcell gused" style="background:' + colorOf(grid[k]) + '">' + (grid[k] % 100) + '</div>';
+        else if (grid[k]) cells += '<div class="gcell gused" style="background:' + colorOf(grid[k]) + '"><span class="gno">' + (grid[k] % 100) + '</span></div>';
         else cells += '<div class="gcell gempty"></div>';
       }
+    }
+    // 贴纸叠加层：按每张卡片占格的包围盒放置透明贴纸图（模拟游戏内摆放效果）
+    var stamps = '';
+    if (s) {
+      var CELL = 48, GAP = 4;
+      s.placed.forEach(function (e) {
+        var sn = e[0];
+        var xs = [], ys = [];
+        e[1].forEach(function (c) { xs.push(c[0]); ys.push(c[1]); });
+        var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+        var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+        var img = (window.CARD_IMGS && window.CARD_IMGS[sn]) || '';
+        stamps += '<div class="stamp" style="left:' + (x0 * CELL) + 'px;top:' + (y0 * CELL) + 'px;width:' + ((x1 - x0 + 1) * CELL - GAP) + 'px;height:' + ((y1 - y0 + 1) * CELL - GAP) + 'px;">'
+          + (img ? '<img src="' + img + '" alt="' + sn + '">' : '')
+          + '<span class="stno">' + (sn % 100) + '</span></div>';
+      });
     }
     var title = lv.date + ' · ' + t('lvBtn', { sn: lv.sn }) + '（' + t('target') + ' ' + needText(lv.need);
     if (s) title += ' \u2192 ' + t('reached') + ' ' + needText(s.total);
     title += '）';
     if (preview) title = '<span style="background:#9EACEA;color:#fff;border-radius:6px;padding:1px 8px;font-size:11px;font-weight:600;margin-right:6px;">' + t('previewBadge') + '</span>' + title;
     return '<div class="gridrow"><div class="gridbox"><div class="gt">' + title + '</div>'
-      + '<div class="grid5">' + cells + '</div></div></div>';
+      + '<div class="gridwrap"><div class="grid5">' + cells + '</div>' + stamps + '</div></div></div>';
   }
 
   // 结果渲染

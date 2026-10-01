@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>贴纸渲染验证</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 20px; font-family: sans-serif; background: #F4F3EE; color: #1A1B1C; }
+  .gt { font-size: 13px; font-weight: 600; margin: 4px 0 6px; }
+  .gridwrap { position: relative; display: inline-block; margin-bottom: 20px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 44px); gap: 4px; }
+  .gcell { width: 44px; height: 44px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; box-sizing: border-box; position: relative; }
+  .glock { background: #9aa0ab; color: #fff; border: 1px solid #7d828c; }
+  .gused { border: 1px solid rgba(0,0,0,0.15); }
+  .gempty { background: #fff; border: 1px dashed #c8cbd3; }
+  .gno { position: absolute; top: 1px; right: 3px; font-size: 8px; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .stamp { position: absolute; z-index: 2; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+  .stamp img { width: 100%; height: 100%; object-fit: contain; }
+  .stno { position: absolute; top: 1px; right: 3px; font-size: 9px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; }
+  .row { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div id="a"></div>
+  <div id="b"></div>
+</div>
+<script src="data.js"></script>
+<script src="card_imgs.js"></script>
+<script src="solver.js"></script>
+<script>
+  function colorOf(sn) {
+    var a = CARDS[String(sn)].attr;
+    var hR = a[0] > 0, hY = a[1] > 0, hB = a[2] > 0;
+    if (hR && hY && hB) return '#C9A7E8';
+    if (hR && hY) return '#EAA7B2';
+    if (hY && hB) return '#F4B393';
+    if (hR) return '#EAA7B2';
+    if (hY) return '#F4B393';
+    return '#94D8C3';
+  }
+  function renderGrid(lv, s) {
+    var locked = {};
+    lv.locked.forEach(function (p) { locked[p[0] + ',' + p[1]] = 1; });
+    var grid = {};
+    s.placed.forEach(function (e) { e[1].forEach(function (c) { grid[c[0] + ',' + c[1]] = e[0]; }); });
+    var cells = '';
+    for (var row = 0; row < 5; row++) {
+      var y = row;
+      for (var x = 0; x < 5; x++) {
+        var k = x + ',' + y;
+        if (locked[k]) cells += '<div class="gcell glock">\u2715</div>';
+        else if (grid[k]) cells += '<div class="gcell gused" style="background:' + colorOf(grid[k]) + '"><span class="gno">' + (grid[k] % 100) + '</span></div>';
+        else cells += '<div class="gcell gempty"></div>';
+      }
+    }
+    var stamps = '', CELL = 48, GAP = 4;
+    s.placed.forEach(function (e) {
+      var sn = e[0], xs = [], ys = [];
+      e[1].forEach(function (c) { xs.push(c[0]); ys.push(c[1]); });
+      var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+      var y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+      var img = CARD_IMGS[sn] || '';
+      stamps += '<div class="stamp" style="left:' + (x0 * CELL) + 'px;top:' + (y0 * CELL) + 'px;width:' + ((x1 - x0 + 1) * CELL - GAP) + 'px;height:' + ((y1 - y0 + 1) * CELL - GAP) + 'px;">'
+        + '<img src="' + img + '"><span class="stno">' + (sn % 100) + '</span></div>';
+    });
+    return '<div class="gridwrap"><div class="grid5">' + cells + '</div>' + stamps + '</div>';
+  }
+
+  var counts = {};
+  Object.keys(CARDS).forEach(function (sn) { counts[sn] = 1; });
+
+  // 10-01 关8（当前最新可见）
+  var lv8 = LEVELS.filter(function (l) { return l.sn === 8; })[0];
+  var sols8 = window.solveLevel(lv8.need, lv8.locked, counts, { maxSols: 50, maxN: 12, budgetMs: 20000 });
+  document.getElementById('a').innerHTML = '<div class="gt">10-01 关8 · 解1/' + sols8.length + ' · ' + sols8[0].combo.join(',') + '</div>' + renderGrid(lv8, sols8[0]);
+
+  // 09-27 关4
+  var lv4 = LEVELS.filter(function (l) { return l.sn === 4; })[0];
+  var sols4 = window.solveLevel(lv4.need, lv4.locked, counts, { maxSols: 50, maxN: 12, budgetMs: 20000 });
+  document.getElementById('b').innerHTML = '<div class="gt">09-27 关4 · 解1/' + sols4.length + ' · ' + sols4[0].combo.join(',') + '</div>' + renderGrid(lv4, sols4[0]);
+</script>
+</body>
+</html>

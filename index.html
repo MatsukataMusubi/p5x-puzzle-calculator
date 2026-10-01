@@ -45,11 +45,16 @@
   .solnav select { padding: 4px 8px; border: 1px solid #c8cbd3; border-radius: 6px; font-size: 12px; }
   .gridrow { display: flex; flex-wrap: wrap; gap: 16px; }
   .gridbox .gt { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
-  .grid5 { display: grid; grid-template-columns: repeat(5, 34px); gap: 3px; }
-  .gcell { width: 34px; height: 34px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; box-sizing: border-box; }
+  .gridwrap { position: relative; display: inline-block; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 44px); gap: 4px; }
+  .gcell { width: 44px; height: 44px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; box-sizing: border-box; }
   .glock { background: #9aa0ab; color: #fff; border: 1px solid #7d828c; }
-  .gused { border: 1px solid rgba(0,0,0,0.15); }
+  .gused { border: 1px solid rgba(0,0,0,0.15); position: relative; }
   .gempty { background: #fff; border: 1px dashed #c8cbd3; }
+  .gno { position: absolute; top: 1px; right: 3px; font-size: 8px; color: rgba(255,255,255,0.9); text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+  .stamp { position: absolute; z-index: 2; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+  .stamp img { width: 100%; height: 100%; object-fit: contain; }
+  .stno { position: absolute; top: 1px; right: 3px; font-size: 9px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.55); border-radius: 4px; padding: 0 3px; }
   .usecards { min-width: 200px; }
   .usecard { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .usecard img { width: 64px; height: auto; border-radius: 6px; }
@@ -95,7 +100,7 @@
   <div class="panel">
     <h2 id="secResult">运算结果</h2>
     <div class="result" id="result">
-      <div class="status" id="loadTip">正在加载数据（约 90KB，请稍候）…</div>
+      <div class="status" id="loadTip">正在加载数据（约 380KB，请稍候）…</div>
     </div>
   </div>
 
@@ -106,7 +111,17 @@
 </div>
 
 <script src="data.js"></script>
+<script src="card_imgs.js"></script>
 <script src="solver.js"></script>
 <script src="renderer.js"></script>
+<script>
+  // 测试钩子：?auto=1 自动计算并切换到后续解法（验证用）
+  if (location.search.indexOf('auto=1') >= 0) {
+    setTimeout(function () {
+      var b = document.getElementById('calcBtn');
+      if (b) b.click();
+    }, 800);
+  }
+</script>
 </body>
 </html>

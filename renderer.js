@@ -12,11 +12,12 @@
       pageTitle: 'P5X 怪盗团团长的特训日程 · 拼图计算器',
       langLabel: 'EN',
       logoSub: '拼图计算器 · 每日 04:00 更新',
-      subDesc: '关卡按游戏日程解锁：服务器北京时间每天凌晨 4:00 后，当天的拼图关卡才会出现在列表里。输入你实际拥有的卡片数量 → 选关卡 → 点「开始运算」，列出全部摆法（卡不能旋转/翻转；判定=红/黄/蓝 三项 ≥ 目标即完成，不必铺满；灰色 ✕=锁定格）。',
+      subDesc: '关卡按游戏日程解锁：服务器北京时间每天凌晨 4:00 后，当天的拼图关卡才会出现在列表里。输入你实际拥有的卡片数量（默认每种 3 张）→ 选关卡 → 点「开始运算」，列出卡片组合方案（同一组合只算 1 个解，摆法位置不计；卡不能旋转/翻转；判定=红/黄/蓝 三项 ≥ 目标即完成，不必铺满；灰色 ✕=锁定格）。',
       secLevel: '选择关卡',
       secResult: '运算结果',
-      secCards: '我的卡片（输入数量，0 表示没有）',
+      secCards: '我的卡片（默认每种 3 张，0 表示没有）',
       btnCalc: '开始运算',
+      paretoLabel: '只留精简方案（去掉能再删一张卡的方案）',
       loading: '正在加载数据（约 380KB，请稍候）…',
       loadFail: '数据文件加载失败或未完成，请刷新页面重试（Ctrl+F5）。',
       follow: '觉得有用点个关注 →',
@@ -30,7 +31,9 @@
       inputFirst: '请先输入至少一张卡的数量',
       computing: '运算中…（卡库 {n} 种）',
       done: '完成：{n} 个解（{s}s）',
-      noSol: '该关卡在「这些卡数量」下没有可行摆法（换关卡或加卡数量再试）。',
+      totalFmt: '共 {t} 个方案，显示前 {s} 个（卡片组合，位置不计）',
+      timedOut: '（运算超预算，总数可能不全）',
+      noSol: '该关卡在这些卡片数量下没有可行组合（换关卡或加卡数量再试）。',
       notCalc: '未计算',
       previewBadge: '棋盘预览 · 未计算',
       previewHint: '已选择 {d} 关{sn} —— 调整卡片数量后点「开始运算」才会列出摆法。',
@@ -47,11 +50,12 @@
       pageTitle: 'P5X Phantom Thief Chief\u2019s Training Routine \u00b7 Puzzle Calculator',
       langLabel: '中',
       logoSub: 'Puzzle Calculator \u00b7 Updates daily 04:00',
-      subDesc: 'Levels unlock per game schedule: after 4:00 AM (server Beijing time) each day, that day\u2019s puzzle appears. Enter the quantities of cards you own \u2192 pick a level \u2192 press "Calculate" to list all placements (cards can\u2019t rotate/flip; win = Red/Yellow/Blue all \u2265 target; gray \u2715 = locked).',
+      subDesc: 'Levels unlock per game schedule: after 4:00 AM (server Beijing time) each day, that day\u2019s puzzle appears. Enter the quantities of cards you own (default 3 each) \u2192 pick a level \u2192 press "Calculate" to list card combos (same combo counts as 1 solution, placements don\u2019t matter; cards can\u2019t rotate/flip; win = Red/Yellow/Blue all \u2265 target; gray \u2715 = locked).',
       secLevel: 'Select Level',
       secResult: 'Result',
-      secCards: 'My Cards (set quantity, 0 = none)',
+      secCards: 'My Cards (default 3 each, 0 = none)',
       btnCalc: 'Calculate',
+      paretoLabel: 'Only minimal combos (drop ones where removing a card still clears)',
       loading: 'Loading data (~380KB, please wait)\u2026',
       loadFail: 'Data failed to load. Please refresh (Ctrl+F5).',
       follow: 'Follow if helpful \u2192',
@@ -65,7 +69,9 @@
       inputFirst: 'Enter at least one card quantity first',
       computing: 'Calculating\u2026 ({n} card types)',
       done: 'Done: {n} solutions ({s}s)',
-      noSol: 'No placement with these quantities (try another level or add more cards).',
+      totalFmt: '{t} combos total, showing first {s}',
+      timedOut: ' (budget reached, total may be partial)',
+      noSol: 'No feasible combo with these quantities (try another level or add more cards).',
       notCalc: 'Not calculated',
       previewBadge: 'Board preview \u00b7 not calculated',
       previewHint: 'Selected {d} LV.{sn} \u2014 adjust card quantities, then press "Calculate" to list placements.',
@@ -127,6 +133,7 @@
   var curLv = visibleLevels.length ? visibleLevels[visibleLevels.length - 1].sn : 0;
   var sols = [];
   var solIdx = 0;
+  var solTotal = 0, solTimedOut = false, computed = false;
 
   // need 数组 -> 彩色 span
   function needText(need) {
@@ -161,6 +168,8 @@
   document.getElementById('loadTip').innerHTML = t('loading');
   var followEl = document.getElementById('followText');
   if (followEl) followEl.textContent = t('follow');
+  var pEl = document.getElementById('paretoLabel');
+  if (pEl) pEl.textContent = t('paretoLabel');
   var langBtn = document.getElementById('langBtn');
   langBtn.textContent = t('langLabel');
   langBtn.onclick = function () {
@@ -185,7 +194,7 @@
       b.onclick = function () {
         curLv = lv.sn;
         renderLvBtns();
-        sols = []; solIdx = 0;
+        sols = []; solIdx = 0; computed = false;
         statusEl.textContent = t('previewHint', { d: shortDate(lv.date), sn: lv.sn });
         renderResult();
       };
@@ -215,14 +224,14 @@
     var qty = document.createElement('div');
     qty.className = 'qty';
     var minus = document.createElement('button'); minus.textContent = '\u2212';
-    var input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 9; input.value = 1;
+    var input = document.createElement('input'); input.type = 'number'; input.min = 0; input.max = 9; input.value = 3;
     var plus = document.createElement('button'); plus.textContent = '+';
     function setVal(v) {
       v = Math.max(0, Math.min(9, Math.floor(v) || 0));
       input.value = v;
       counts[sn] = v;
     }
-    counts[sn] = 1; // 默认数量 1
+    counts[sn] = 3; // 默认数量 3
     minus.onclick = function () { setVal(parseInt(input.value || 0, 10) - 1); };
     plus.onclick = function () { setVal(parseInt(input.value || 0, 10) + 1); };
     input.onchange = function () { setVal(parseInt(input.value || 0, 10)); };
@@ -245,10 +254,19 @@
     statusEl.textContent = t('computing', { n: Object.keys(used).length });
     setTimeout(function () {
       var t0 = Date.now();
-      sols = window.solveLevel(lv.need, lv.locked, used, { maxSols: 50, maxN: 12, budgetMs: 20000 });
+      var paretoOn = document.getElementById('paretoChk') ? document.getElementById('paretoChk').checked : true;
+      var res = window.solveLevel(lv.need, lv.locked, used, { maxSols: 50, maxN: 12, budgetMs: 20000, pareto: paretoOn });
       var dt = ((Date.now() - t0) / 1000).toFixed(1);
+      sols = res.sols;
+      solTotal = res.total;
+      solTimedOut = res.timedOut;
+      computed = true;
       solIdx = 0;
-      statusEl.textContent = t('done', { n: sols.length, s: dt });
+      if (sols.length > 0) {
+        statusEl.textContent = t('totalFmt', { t: solTotal, s: sols.length }) + (solTimedOut ? t('timedOut') : '') + '（' + dt + 's）';
+      } else {
+        statusEl.textContent = t('noSol');
+      }
       calcBtn.disabled = false;
       renderResult();
     }, 30);
@@ -299,9 +317,9 @@
     var box = document.getElementById('result');
     var lv = LEVELS.filter(function (l) { return l.sn === curLv; })[0];
     if (sols.length === 0) {
-      box.innerHTML = '<div class="status" style="font-weight:600;color:#9EACEA;margin-bottom:8px;">'
-        + t('previewHint', { d: shortDate(lv.date), sn: lv.sn }) + '</div>'
-        + renderGrid(lv, null, true);
+      box.innerHTML = '<div class="status" style="font-weight:600;color:' + (computed ? '#EA6668' : '#9EACEA') + ';margin-bottom:8px;">'
+        + (computed ? t('noSol') : t('previewHint', { d: shortDate(lv.date), sn: lv.sn })) + '</div>'
+        + renderGrid(lv, null, !computed);
       return;
     }
     var s = sols[solIdx];
